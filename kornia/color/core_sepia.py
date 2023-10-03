@@ -1,9 +1,9 @@
 import keras_core as keras
 
-from kornia.core import Module, IntegratedTensor
+from kornia.core import Module
 
 
-def sepia_from_rgb(input: IntegratedTensor, rescale: bool = True, eps: float = 1e-6) -> IntegratedTensor:
+def sepia_from_rgb(input, rescale: bool = True, eps: float = 1e-6):
     r"""Apply to a tensor the sepia filter.
 
     Args:
@@ -76,5 +76,5 @@ class Sepia(Module):
     def __repr__(self) -> str:
         return self.__class__.__name__ + f'(rescale={self.rescale}, eps={self.eps})'
 
-    def call(self, input: IntegratedTensor) -> IntegratedTensor:
+    def call(self, input):
         return sepia_from_rgb(input, rescale=self.rescale, eps=self.eps)

@@ -2,10 +2,10 @@ from typing import Tuple
 
 import keras_core as keras
 
-from kornia.core import Module, IntegratedTensor
+from kornia.core import Module
 
 
-def rgb_to_yuv(image: IntegratedTensor) -> IntegratedTensor:
+def rgb_to_yuv(image):
     r"""Convert an RGB image to YUV.
 
     .. image:: _static/img/rgb_to_yuv.png
@@ -22,21 +22,19 @@ def rgb_to_yuv(image: IntegratedTensor) -> IntegratedTensor:
         >>> input = torch.rand(2, 3, 4, 5)
         >>> output = rgb_to_yuv(input)  # 2x3x4x5
     """
-    if not isinstance(image, IntegratedTensor):
-        raise TypeError(f"Input type is not a IntegratedTensor. Got {type(image)}")
 
     if len(image.shape) < 3 or image.shape[-3] != 3:
         raise ValueError(f"Input size must have a shape of (*, 3, H, W). Got {image.shape}")
 
-    r: IntegratedTensor = image[..., 0, :, :]
-    g: IntegratedTensor = image[..., 1, :, :]
-    b: IntegratedTensor = image[..., 2, :, :]
+    r = image[..., 0, :, :]
+    g = image[..., 1, :, :]
+    b = image[..., 2, :, :]
 
-    y: IntegratedTensor = 0.299 * r + 0.587 * g + 0.114 * b
-    u: IntegratedTensor = -0.147 * r - 0.289 * g + 0.436 * b
-    v: IntegratedTensor = 0.615 * r - 0.515 * g - 0.100 * b
+    y = 0.299 * r + 0.587 * g + 0.114 * b
+    u = -0.147 * r - 0.289 * g + 0.436 * b
+    v = 0.615 * r - 0.515 * g - 0.100 * b
 
-    out: IntegratedTensor = keras.ops.stack([y, u, v], axis=-3)
+    out = keras.ops.stack([y, u, v], axis=-3)
 
     return out
 
@@ -70,7 +68,7 @@ def _unfold2(input_tensor, dim, size, step):
     
     return unfolded_tensor
 
-def rgb_to_yuv420(image: IntegratedTensor) -> Tuple[IntegratedTensor, IntegratedTensor]:
+def rgb_to_yuv420(image):
     r"""Convert an RGB image to YUV 420 (subsampled).
 
     The image data is assumed to be in the range of (0, 1). Input need to be padded to be evenly divisible by 2
@@ -87,8 +85,6 @@ def rgb_to_yuv420(image: IntegratedTensor) -> Tuple[IntegratedTensor, Integrated
         >>> input = torch.rand(2, 3, 4, 6)
         >>> output = rgb_to_yuv420(input)  # (2x1x4x6, 2x2x2x3)
     """
-    if not isinstance(image, IntegratedTensor):
-        raise TypeError(f"Input type is not a IntegratedTensor. Got {type(image)}")
 
     if len(image.shape) < 3 or image.shape[-3] != 3:
         raise ValueError(f"Input size must have a shape of (*, 3, H, W). Got {image.shape}")
@@ -103,7 +99,7 @@ def rgb_to_yuv420(image: IntegratedTensor) -> Tuple[IntegratedTensor, Integrated
     return (yuvimage[..., :1, :, :], yuvimage2)
 
 
-def rgb_to_yuv422(image: IntegratedTensor) -> Tuple[IntegratedTensor, IntegratedTensor]:
+def rgb_to_yuv422(image):
     r"""Convert an RGB image to YUV 422 (subsampled).
 
     The image data is assumed to be in the range of (0, 1). Input need to be padded to be evenly divisible by 2
@@ -120,8 +116,6 @@ def rgb_to_yuv422(image: IntegratedTensor) -> Tuple[IntegratedTensor, Integrated
         >>> input = torch.rand(2, 3, 4, 6)
         >>> output = rgb_to_yuv420(input)  # (2x1x4x6, 2x1x4x3)
     """
-    if not isinstance(image, IntegratedTensor):
-        raise TypeError(f"Input type is not a IntegratedTensor. Got {type(image)}")
 
     if len(image.shape) < 3 or image.shape[-3] != 3:
         raise ValueError(f"Input size must have a shape of (*, 3, H, W). Got {image.shape}")
@@ -136,7 +130,7 @@ def rgb_to_yuv422(image: IntegratedTensor) -> Tuple[IntegratedTensor, Integrated
     return (yuvimage[..., :1, :, :], yuvimage2)
 
 
-def yuv_to_rgb(image: IntegratedTensor) -> IntegratedTensor:
+def yuv_to_rgb(image):
     r"""Convert an YUV image to RGB.
 
     The image data is assumed to be in the range of (0, 1) for luma and (-0.5, 0.5) for chroma.
@@ -151,26 +145,24 @@ def yuv_to_rgb(image: IntegratedTensor) -> IntegratedTensor:
         >>> input = torch.rand(2, 3, 4, 5)
         >>> output = yuv_to_rgb(input)  # 2x3x4x5
     """
-    if not isinstance(image, IntegratedTensor):
-        raise TypeError(f"Input type is not a torch.Tensor. Got {type(image)}")
 
     if len(image.shape) < 3 or image.shape[-3] != 3:
         raise ValueError(f"Input size must have a shape of (*, 3, H, W). Got {image.shape}")
 
-    y: IntegratedTensor = image[..., 0, :, :]
-    u: IntegratedTensor = image[..., 1, :, :]
-    v: IntegratedTensor = image[..., 2, :, :]
+    y = image[..., 0, :, :]
+    u = image[..., 1, :, :]
+    v = image[..., 2, :, :]
 
-    r: IntegratedTensor = y + 1.14 * v  # coefficient for g is 0
-    g: IntegratedTensor = y + -0.396 * u - 0.581 * v
-    b: IntegratedTensor = y + 2.029 * u  # coefficient for b is 0
+    r = y + 1.14 * v  # coefficient for g is 0
+    g = y + -0.396 * u - 0.581 * v
+    b = y + 2.029 * u  # coefficient for b is 0
 
-    out: IntegratedTensor = keras.ops.stack([r, g, b], axis=-3)
+    out = keras.ops.stack([r, g, b], axis=-3)
 
     return out
 
 
-def yuv420_to_rgb(imagey: IntegratedTensor, imageuv: IntegratedTensor) -> IntegratedTensor:
+def yuv420_to_rgb(imagey, imageuv):
     r"""Convert an YUV420 image to RGB.
 
     The image data is assumed to be in the range of (0, 1) for luma and (-0.5, 0.5) for chroma.
@@ -189,11 +181,6 @@ def yuv420_to_rgb(imagey: IntegratedTensor, imageuv: IntegratedTensor) -> Integr
         >>> inputuv = torch.rand(2, 2, 2, 3)
         >>> output = yuv420_to_rgb(inputy, inputuv)  # 2x3x4x6
     """
-    if not isinstance(imagey, IntegratedTensor):
-        raise TypeError(f"Input type is not a IntegratedTensor. Got {type(imagey)}")
-
-    if not isinstance(imageuv, IntegratedTensor):
-        raise TypeError(f"Input type is not a IntegratedTensor. Got {type(imageuv)}")
 
     if len(imagey.shape) < 3 or imagey.shape[-3] != 1:
         raise ValueError(f"Input imagey size must have a shape of (*, 1, H, W). Got {imagey.shape}")
@@ -223,7 +210,7 @@ def yuv420_to_rgb(imagey: IntegratedTensor, imageuv: IntegratedTensor) -> Integr
     return yuv_to_rgb(yuv444image)
 
 
-def yuv422_to_rgb(imagey: IntegratedTensor, imageuv: IntegratedTensor) -> IntegratedTensor:
+def yuv422_to_rgb(imagey, imageuv):
     r"""Convert an YUV422 image to RGB.
 
     The image data is assumed to be in the range of (0, 1) for luma and (-0.5, 0.5) for chroma.
@@ -241,11 +228,6 @@ def yuv422_to_rgb(imagey: IntegratedTensor, imageuv: IntegratedTensor) -> Integr
         >>> inputuv = torch.rand(2, 2, 2, 3)
         >>> output = yuv420_to_rgb(inputy, inputuv)  # 2x3x4x5
     """
-    if not isinstance(imagey, IntegratedTensor):
-        raise TypeError(f"Input type is not a IntegratedTensor. Got {type(imagey)}")
-
-    if not isinstance(imageuv, IntegratedTensor):
-        raise TypeError(f"Input type is not a IntegratedTensor. Got {type(imageuv)}")
 
     if len(imagey.shape) < 3 or imagey.shape[-3] != 1:
         raise ValueError(f"Input imagey size must have a shape of (*, 1, H, W). Got {imagey.shape}")
@@ -267,7 +249,7 @@ def yuv422_to_rgb(imagey: IntegratedTensor, imageuv: IntegratedTensor) -> Integr
     return yuv_to_rgb(yuv444image)
 
 
-class RgbToYuv(IntegratedTensor): #CHECK nn.Module
+class RgbToYuv(keras.layers.Layer): #CHECK nn.Module
     r"""Convert an image from RGB to YUV.
 
     The image data is assumed to be in the range of (0, 1).
@@ -288,11 +270,11 @@ class RgbToYuv(IntegratedTensor): #CHECK nn.Module
         [1] https://es.wikipedia.org/wiki/YUV#RGB_a_Y'UV
     """
 
-    def call(self, input: IntegratedTensor) -> IntegratedTensor:
+    def call(self, input):
         return rgb_to_yuv(input)
 
 
-class RgbToYuv420(IntegratedTensor): #CHECK nn.Module
+class RgbToYuv420(keras.layers.Layer): #CHECK nn.Module
     r"""Convert an image from RGB to YUV420.
 
     The image data is assumed to be in the range of (0, 1). Width and Height evenly divisible by 2.
@@ -313,11 +295,11 @@ class RgbToYuv420(IntegratedTensor): #CHECK nn.Module
         [1] https://es.wikipedia.org/wiki/YUV#RGB_a_Y'UV
     """
 
-    def call(self, yuvinput: IntegratedTensor) -> Tuple[IntegratedTensor, IntegratedTensor]:  # skipcq: PYL-R0201
+    def call(self, yuvinput):  # skipcq: PYL-R0201
         return rgb_to_yuv420(yuvinput)
 
 
-class RgbToYuv422(IntegratedTensor): #CHECK nn.Module
+class RgbToYuv422(keras.layers.Layer): #CHECK nn.Module
     r"""Convert an image from RGB to YUV422.
 
     The image data is assumed to be in the range of (0, 1). Width evenly disvisible by 2.
@@ -338,11 +320,11 @@ class RgbToYuv422(IntegratedTensor): #CHECK nn.Module
         [1] https://es.wikipedia.org/wiki/YUV#RGB_a_Y'UV
     """
 
-    def call(self, yuvinput: IntegratedTensor) -> Tuple[IntegratedTensor, IntegratedTensor]:  # skipcq: PYL-R0201
+    def call(self, yuvinput):# skipcq: PYL-R0201
         return rgb_to_yuv422(yuvinput)
 
 
-class YuvToRgb(IntegratedTensor): #CHECK nn.Module
+class YuvToRgb(keras.layers.Layer): #CHECK nn.Module
     r"""Convert an image from YUV to RGB.
 
     The image data is assumed to be in the range of (0, 1) for luma and (-0.5, 0.5) for chroma.
@@ -360,11 +342,11 @@ class YuvToRgb(IntegratedTensor): #CHECK nn.Module
         >>> output = rgb(input)  # 2x3x4x5
     """
 
-    def call(self, input: IntegratedTensor) -> IntegratedTensor:
+    def call(self, input):
         return yuv_to_rgb(input)
 
 
-class Yuv420ToRgb(IntegratedTensor): #CHECK nn.Module
+class Yuv420ToRgb(keras.layers.Layer): #CHECK nn.Module
     r"""Convert an image from YUV to RGB.
 
     The image data is assumed to be in the range of (0, 1) for luma and (-0.5, 0.5) for chroma.
@@ -385,11 +367,11 @@ class Yuv420ToRgb(IntegratedTensor): #CHECK nn.Module
         >>> output = rgb(inputy, inputuv)  # 2x3x4x6
     """
 
-    def call(self, inputy: IntegratedTensor, inputuv: IntegratedTensor) -> IntegratedTensor:  # skipcq: PYL-R0201
+    def call(self, inputy, inputuv):  # skipcq: PYL-R0201
         return yuv420_to_rgb(inputy, inputuv)
 
 
-class Yuv422ToRgb(IntegratedTensor): #CHECK nn.Module
+class Yuv422ToRgb(keras.layers.Layer): #CHECK nn.Module
     r"""Convert an image from YUV to RGB.
 
     The image data is assumed to be in the range of (0, 1) for luma and (-0.5, 0.5) for chroma.
@@ -410,5 +392,5 @@ class Yuv422ToRgb(IntegratedTensor): #CHECK nn.Module
         >>> output = rgb(inputy, inputuv)  # 2x3x4x6
     """
 
-    def call(self, inputy: IntegratedTensor, inputuv: IntegratedTensor) -> IntegratedTensor:  # skipcq: PYL-R0201
+    def call(self, inputy, inputuv):  # skipcq: PYL-R0201
         return yuv422_to_rgb(inputy, inputuv)

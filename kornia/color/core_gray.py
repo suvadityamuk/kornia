@@ -2,12 +2,12 @@ from __future__ import annotations
 
 
 from kornia.color.rgb import bgr_to_rgb
-from kornia.core import Module, IntegratedTensor, concatenate
+from kornia.core import Module, concatenate
 from kornia.core.check import KORNIA_CHECK_IS_TENSOR
 
 import keras_core as keras
 
-def grayscale_to_rgb(image: IntegratedTensor) -> IntegratedTensor:
+def grayscale_to_rgb(image):
     r"""Convert a grayscale image to RGB version of image.
 
     .. image:: _static/img/grayscale_to_rgb.png
@@ -32,7 +32,7 @@ def grayscale_to_rgb(image: IntegratedTensor) -> IntegratedTensor:
     return concatenate([image, image, image], -3)
 
 
-def rgb_to_grayscale(image: IntegratedTensor, rgb_weights: IntegratedTensor | None = None) -> IntegratedTensor:
+def rgb_to_grayscale(image, rgb_weights = None):
     r"""Convert a RGB image to grayscale version of image.
 
     .. image:: _static/img/rgb_to_grayscale.png
@@ -61,10 +61,10 @@ def rgb_to_grayscale(image: IntegratedTensor, rgb_weights: IntegratedTensor | No
     if rgb_weights is None:
         # 8 bit images
         if image.dtype == 'uint8':
-            rgb_weights = IntegratedTensor([76, 150, 29], dtype='uint8')
+            rgb_weights = keras.ops.convert_to_tensor([76, 150, 29], dtype='uint8')
         # floating point images
         elif image.dtype in ('float16', 'float32', 'float64'):
-            rgb_weights = IntegratedTensor([0.299, 0.587, 0.114], dtype=image.dtype)
+            rgb_weights = keras.ops.convert_to_tensor([0.299, 0.587, 0.114], dtype=image.dtype)
         else:
             raise TypeError(f"Unknown data type: {image.dtype}")
     else:
@@ -72,15 +72,15 @@ def rgb_to_grayscale(image: IntegratedTensor, rgb_weights: IntegratedTensor | No
         rgb_weights = rgb_weights.to(image)
 
     # unpack the color image channels with RGB order
-    r: IntegratedTensor = image[..., 0:1, :, :]
-    g: IntegratedTensor = image[..., 1:2, :, :]
-    b: IntegratedTensor = image[..., 2:3, :, :]
+    r = image[..., 0:1, :, :]
+    g = image[..., 1:2, :, :]
+    b = image[..., 2:3, :, :]
 
     w_r, w_g, w_b = keras.ops.squeeze(rgb_weights)
     return w_r * r + w_g * g + w_b * b
 
 
-def bgr_to_grayscale(image: IntegratedTensor) -> IntegratedTensor:
+def bgr_to_grayscale(image):
     r"""Convert a BGR image to grayscale.
 
     The image data is assumed to be in the range of (0, 1). First flips to RGB, then converts.
@@ -100,7 +100,7 @@ def bgr_to_grayscale(image: IntegratedTensor) -> IntegratedTensor:
     if len(image.shape) < 3 or image.shape[-3] != 3:
         raise ValueError(f"Input size must have a shape of (*, 3, H, W). Got {image.shape}")
 
-    image_rgb: IntegratedTensor = bgr_to_rgb(image)
+    image_rgb = bgr_to_rgb(image)
     return rgb_to_grayscale(image_rgb)
 
 
@@ -122,7 +122,7 @@ class GrayscaleToRgb(Module):
         >>> output = rgb(input)  # 2x3x4x5
     """
 
-    def call(self, image: IntegratedTensor) -> IntegratedTensor:
+    def call(self, image):
         return grayscale_to_rgb(image)
 
 
@@ -144,13 +144,13 @@ class RgbToGrayscale(Module):
         >>> output = gray(input)  # 2x1x4x5
     """
 
-    def __init__(self, rgb_weights: IntegratedTensor | None = None) -> None:
+    def __init__(self, rgb_weights = None) -> None:
         super().__init__()
         if rgb_weights is None:
-            rgb_weights = IntegratedTensor([0.299, 0.587, 0.114])
+            rgb_weights = keras.ops.convert_to_tensor([0.299, 0.587, 0.114])
         self.rgb_weights = rgb_weights
 
-    def call(self, image: IntegratedTensor) -> IntegratedTensor:
+    def call(self, image):
         return rgb_to_grayscale(image, rgb_weights=self.rgb_weights)
 
 
@@ -172,5 +172,5 @@ class BgrToGrayscale(Module):
         >>> output = gray(input)  # 2x1x4x5
     """
 
-    def call(self, image: IntegratedTensor) -> IntegratedTensor:
+    def call(self, image):
         return bgr_to_grayscale(image)

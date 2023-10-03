@@ -1,5 +1,5 @@
 import keras_core as keras
-from kornia.core.integrated_tensor import IntegratedTensor
+# from kornia.core.integrated_tensor import IntegratedTensor
 
 Dtype = keras.backend.floatx()
 
@@ -7,8 +7,8 @@ Dtype = keras.backend.floatx()
 
 Module = keras.layers.Layer
 ModuleList = keras.Sequential
-Tensor = IntegratedTensor
-tensor = IntegratedTensor
+# Tensor = IntegratedTensor
+# tensor = IntegratedTensor
 
 # functions
 # NOTE: ideally we expose what we find in numpy

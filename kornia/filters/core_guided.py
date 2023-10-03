@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from kornia.core import Module, IntegratedTensor
+from kornia.core import Module
 from kornia.core.check import KORNIA_CHECK, KORNIA_CHECK_IS_TENSOR, KORNIA_CHECK_SHAPE
 
 from .blur import box_blur
@@ -8,12 +8,12 @@ from .kernels import _unpack_2d_ks
 
 import keras_core as keras
 
-def _interpolate(input: IntegratedTensor, scale: float, mode: str):
+def _interpolate(input, scale: float, mode: str):
     result = keras.ops.image.resize(input,((IntegratedTensor.height*scale),(IntegratedTensor.width*scale)),interpolation=mode)
     return result
 def _preprocess_fast_guided_blur(
-    guidance: IntegratedTensor, input: IntegratedTensor, kernel_size: tuple[int, int] | int, subsample: int = 1
-) -> tuple[IntegratedTensor, IntegratedTensor, tuple[int, int]]:
+    guidance, input, kernel_size: tuple[int, int] | int, subsample: int = 1
+):
     ky, kx = _unpack_2d_ks(kernel_size)
     if subsample > 1:
         s = 1 / subsample
@@ -27,13 +27,13 @@ def _preprocess_fast_guided_blur(
 
 
 def _guided_blur_grayscale_guidance(
-    guidance: IntegratedTensor,
-    input: IntegratedTensor,
+    guidance,
+    input,
     kernel_size: tuple[int, int] | int,
-    eps: float | IntegratedTensor,
+    eps,
     border_type: str = 'reflect',
     subsample: int = 1,
-) -> IntegratedTensor:
+):
     guidance_sub, input_sub, kernel_size = _preprocess_fast_guided_blur(guidance, input, kernel_size, subsample)
 
     mean_I = box_blur(guidance_sub, kernel_size, border_type)
@@ -49,7 +49,7 @@ def _guided_blur_grayscale_guidance(
         corr_Ip = box_blur(guidance_sub * input_sub, kernel_size, border_type)
         cov_Ip = corr_Ip - mean_I * mean_p
 
-    if isinstance(eps, IntegratedTensor):
+    if isinstance(eps):
         eps = keras.ops.reshape(eps,(-1, 1, 1, 1))  # N -> NCHW      
 
     a = cov_Ip / (var_I + eps)
@@ -66,13 +66,13 @@ def _guided_blur_grayscale_guidance(
 
 
 def _guided_blur_multichannel_guidance(
-    guidance: IntegratedTensor,
-    input: IntegratedTensor,
+    guidance,
+    input,
     kernel_size: tuple[int, int] | int,
-    eps: float | IntegratedTensor,
+    eps,
     border_type: str = 'reflect',
     subsample: int = 1,
-) -> IntegratedTensor:
+):
     guidance_sub, input_sub, kernel_size = _preprocess_fast_guided_blur(guidance, input, kernel_size, subsample)
     B, C, H, W = guidance_sub.shape
 
@@ -95,7 +95,7 @@ def _guided_blur_multichannel_guidance(
         corr_Ip = keras.ops.transpose(corr_Ip,axes=(0, 2, 3, 1))
         cov_Ip = keras.ops.reshape(corr_Ip,(B, H, W, C, -1)) - keras.ops.expand_dims(mean_p, -2) * keras.ops.expand_dims(mean_I, -1)
 
-    if isinstance(eps, IntegratedTensor):
+    if isinstance(eps):
         _eps = keras.ops.eye(C, dtype=guidance.dtype)                   
         _eps = keras.ops.reshape(_eps,(1, 1, 1, C, C)) * keras.ops.reshape(_eps,(-1, 1, 1, 1, 1)) 
     else:
@@ -120,13 +120,13 @@ def _guided_blur_multichannel_guidance(
 
 
 def guided_blur(
-    guidance: IntegratedTensor,
-    input: IntegratedTensor,
+    guidance,
+    input,
     kernel_size: tuple[int, int] | int,
-    eps: float | IntegratedTensor,
+    eps,
     border_type: str = 'reflect',
     subsample: int = 1,
-) -> IntegratedTensor:
+):
     r"""Blur a tensor using a Guided filter.
 
     .. image:: _static/img/guided_blur.png
@@ -219,5 +219,5 @@ class GuidedBlur(Module):
             f"subsample={self.subsample})"
         )
 
-    def call(self, guidance: IntegratedTensor, input: IntegratedTensor) -> IntegratedTensor:
+    def call(self, guidance, input):
         return guided_blur(guidance, input, self.kernel_size, self.eps, self.border_type, self.subsample)

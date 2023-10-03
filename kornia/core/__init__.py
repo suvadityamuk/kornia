@@ -26,7 +26,6 @@ from ._backend import (
     zeros_like,
 )
 from .tensor_wrapper import TensorWrapper  # type: ignore
-from .integrated_tensor import IntegratedTensor
 
 from .core_backend import (
     Module,

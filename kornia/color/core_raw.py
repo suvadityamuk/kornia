@@ -1,7 +1,5 @@
 from enum import Enum
 
-from kornia.core import IntegratedTensor
-
 import keras_core as keras
 
 class CFA(Enum):
@@ -27,7 +25,7 @@ class CFA(Enum):
     GR = 3
 
 
-def raw_to_rgb(image: IntegratedTensor, cfa: CFA) -> IntegratedTensor:
+def raw_to_rgb(image, cfa: CFA):
     r"""Convert a raw bayer image to RGB version of image.
 
     We are assuming a CFA with 2 green, 1 red, 1 blue. A bilinear interpolation is used for R/G and a fix convolution
@@ -46,8 +44,6 @@ def raw_to_rgb(image: IntegratedTensor, cfa: CFA) -> IntegratedTensor:
         >>> rawinput = torch.randn(2, 1, 4, 6)
         >>> rgb = raw_to_rgb(rawinput, CFA.RG) # 2x3x4x6
     """
-    if not isinstance(image, IntegratedTensor):
-        raise TypeError(f"Input type is not a IntegratedTensor. Got {type(image)}")
 
     if keras.ops.ndim(image) < 3 or keras.ops.shape(image)[-3] != 1:
         raise ValueError(f"Input size must have a shape of (*, 1, H, W). Got {image.shape}.")
@@ -135,8 +131,8 @@ def raw_to_rgb(image: IntegratedTensor, cfa: CFA) -> IntegratedTensor:
     b_up = keras.ops.pad(b_up, [-x for x in bpad])
 
     # all unknown pixels are the average of the nearby green samples
-    kernel = IntegratedTensor(
-        [[[[0.0, 0.25, 0.0], [0.25, 0.0, 0.25], [0.0, 0.25, 0.0]]]], dtype=image.dtype, device=image.device
+    kernel = keras.ops.convert_to_tensor(
+        [[[[0.0, 0.25, 0.0], [0.25, 0.0, 0.25], [0.0, 0.25, 0.0]]]], dtype=image.dtype
     )
 
     # This is done on all samples but result for the known green samples is then overwritten by the input
@@ -163,12 +159,11 @@ def raw_to_rgb(image: IntegratedTensor, cfa: CFA) -> IntegratedTensor:
     g_up = g_up.view(imagesize)
     b_up = b_up.view(imagesize)
 
-    rgb: IntegratedTensor = keras.ops.concatenate([r_up, g_up, b_up], axis=-3)
-
+    rgb = keras.ops.concatenate([r_up, g_up, b_up], axis=-3)
     return rgb
 
 
-def rgb_to_raw(image: IntegratedTensor, cfa: CFA) -> IntegratedTensor:
+def rgb_to_raw(image, cfa: CFA):
     r"""Convert a RGB image to RAW version of image with the specified color filter array.
 
     The image data is assumed to be in the range of (0, 1).
@@ -184,15 +179,13 @@ def rgb_to_raw(image: IntegratedTensor, cfa: CFA) -> IntegratedTensor:
         >>> rgbinput = torch.rand(2, 3, 4, 6)
         >>> raw = rgb_to_raw(rgbinput, CFA.BG) # 2x1x4x6
     """
-    if not isinstance(image, IntegratedTensor):
-        raise TypeError(f"Input type is not a IntegratedTensor. Got {type(image)}")
 
     if len(image.shape) < 3 or image.shape[-3] != 3:
         raise ValueError(f"Input size must have a shape of (*, 3, H, W). Got {image.shape}")
 
     # pick the tensor with green pixels
     # clone to make sure grad works
-    output: IntegratedTensor = image[..., 1:2, :, :].clone()
+    output = image[..., 1:2, :, :].clone()
 
     # overwrite the r/b positions (depending on the cfa configuration) with blue/red pixels
     if cfa == CFA.BG:
@@ -211,7 +204,7 @@ def rgb_to_raw(image: IntegratedTensor, cfa: CFA) -> IntegratedTensor:
     return output
 
 
-class RawToRgb(IntegratedTensor):  #CHECK nn.module
+class RawToRgb(keras.layers.Layer):  #CHECK nn.module
     r"""Module to convert a bayer raw image to RGB version of image.
 
     The image data is assumed to be in the range of (0, 1).
@@ -230,11 +223,11 @@ class RawToRgb(IntegratedTensor):  #CHECK nn.module
         super().__init__()
         self.cfa = cfa
 
-    def call(self, image: IntegratedTensor) -> IntegratedTensor:
+    def call(self, image):
         return raw_to_rgb(image, cfa=self.cfa)
 
 
-class RgbToRaw(IntegratedTensor): #CHECK nn.module
+class RgbToRaw(keras.layers.Layer): #CHECK nn.module
     r"""Module to convert a RGB image to bayer raw version of image.
 
     The image data is assumed to be in the range of (0, 1).
@@ -256,5 +249,5 @@ class RgbToRaw(IntegratedTensor): #CHECK nn.module
         super().__init__()
         self.cfa = cfa
 
-    def call(self, image: IntegratedTensor) -> IntegratedTensor:
+    def call(self, image):
         return rgb_to_raw(image, cfa=self.cfa)

@@ -2,7 +2,7 @@ from abc import ABC
 from typing import List, Optional
 
 
-from kornia.core import Module, IntegratedTensor
+from kornia.core import Module
 from kornia.core.check import KORNIA_CHECK_IS_GRAY
 
 import keras_core as keras
@@ -11,21 +11,20 @@ RGBColor = List[float]
 
 
 def _list_color_to_tensor(
-    colors: List[RGBColor], dtype: Optional[IntegratedTensor.dtype]
-) -> IntegratedTensor:
-    return (IntegratedTensor(list(colors), dtype=dtype)).T
+    colors: List[RGBColor], dtype
+):
+    return (keras.ops.convert_to_tensor(list(colors), dtype=dtype)).T
 
 
 class ColorMap(ABC):
     r"""Abstract class to represents a color map."""
-    colors: IntegratedTensor
 
     def __init__(
         self,
+        dtype,
         base_colormap: List[RGBColor],
         num_colors: int,
-        dtype: Optional[IntegratedTensor.dtype],
-    ) -> None:
+    ):
         self._dtype = dtype
 
         self.colors = keras.ops.image.resize(
@@ -115,12 +114,12 @@ class AUTUMN(ColorMap):
     """
 
     def __init__(
-        self, num_colors: int = 64, dtype: Optional[IntegratedTensor.dtype] = None
-    ) -> None:
+        self, num_colors = 64, dtype = None
+    ):
         super().__init__(base_colormap=_BASE_AUTUMN, num_colors=num_colors, dtype=dtype)
 
 
-def apply_colormap(input_tensor: IntegratedTensor, colormap: ColorMap) -> IntegratedTensor:
+def apply_colormap(input_tensor, colormap: ColorMap):
     r"""Apply to a gray tensor a colormap.
 
         The image data is assumed to be integer values.
@@ -198,5 +197,5 @@ class ApplyColorMap(Module):
         super().__init__()
         self.colormap = colormap
 
-    def call(self, input_tensor: IntegratedTensor) -> IntegratedTensor:
+    def call(self, input_tensor):
         return apply_colormap(input_tensor, self.colormap)

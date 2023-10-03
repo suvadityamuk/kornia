@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from kornia.core import Module, IntegratedTensor, pad
+from kornia.core import Module, pad
 from kornia.core.check import KORNIA_CHECK, KORNIA_CHECK_IS_TENSOR, KORNIA_CHECK_SHAPE
 
 from .kernels import _unpack_2d_ks, get_gaussian_kernel2d
@@ -8,14 +8,14 @@ from .median import _compute_zero_padding
 
 
 def _bilateral_blur(
-    input: IntegratedTensor,
-    guidance: IntegratedTensor | None,
+    input,
+    guidance,
     kernel_size: tuple[int, int] | int,
-    sigma_color: float | IntegratedTensor,
-    sigma_space: tuple[float, float] | IntegratedTensor,
+    sigma_color,
+    sigma_space,
     border_type: str = 'reflect',
     color_distance_type: str = 'l1',
-) -> IntegratedTensor:
+):
     "Single implementation for both Bilateral Filter and Joint Bilateral Filter"
 
     KORNIA_CHECK_IS_TENSOR(input)
@@ -29,7 +29,7 @@ def _bilateral_blur(
             "guidance and input should have the same batch size and spatial dimensions",
         )
 
-    if isinstance(sigma_color, IntegratedTensor):
+    if isinstance(sigma_color):
         KORNIA_CHECK_SHAPE(sigma_color, ['B'])
         sigma_color = sigma_color(dtype=input.dtype).view(-1, 1, 1, 1, 1)
 
@@ -64,13 +64,13 @@ def _bilateral_blur(
 
 
 def bilateral_blur(
-    input: IntegratedTensor,
+    input,
     kernel_size: tuple[int, int] | int,
-    sigma_color: float | IntegratedTensor,
-    sigma_space: tuple[float, float] | IntegratedTensor,
+    sigma_color,
+    sigma_space,
     border_type: str = 'reflect',
     color_distance_type: str = 'l1',
-) -> IntegratedTensor:
+):
     r"""Blur a tensor using a Bilateral filter.
 
     .. image:: _static/img/bilateral_blur.png
@@ -107,14 +107,14 @@ def bilateral_blur(
 
 
 def joint_bilateral_blur(
-    input: IntegratedTensor,
-    guidance: IntegratedTensor,
+    input,
+    guidance,
     kernel_size: tuple[int, int] | int,
-    sigma_color: float | IntegratedTensor,
-    sigma_space: tuple[float, float] | IntegratedTensor,
+    sigma_color,
+    sigma_space,
     border_type: str = 'reflect',
     color_distance_type: str = 'l1',
-) -> IntegratedTensor:
+):
     r"""Blur a tensor using a Joint Bilateral filter.
 
     .. image:: _static/img/joint_bilateral_blur.png
@@ -156,8 +156,8 @@ class _BilateralBlur(Module):
     def __init__(
         self,
         kernel_size: tuple[int, int] | int,
-        sigma_color: float | IntegratedTensor,
-        sigma_space: tuple[float, float] | IntegratedTensor,
+        sigma_color,
+        sigma_space,
         border_type: str = 'reflect',
         color_distance_type: str = "l1",
     ) -> None:
@@ -215,7 +215,7 @@ class BilateralBlur(_BilateralBlur):
         torch.Size([2, 4, 5, 5])
     """
 
-    def forward(self, input: IntegratedTensor) -> IntegratedTensor:
+    def forward(self, input):
         return bilateral_blur(
             input, self.kernel_size, self.sigma_color, self.sigma_space, self.border_type, self.color_distance_type
         )
@@ -257,7 +257,7 @@ class JointBilateralBlur(_BilateralBlur):
         torch.Size([2, 4, 5, 5])
     """
 
-    def forward(self, input: IntegratedTensor, guidance: IntegratedTensor) -> IntegratedTensor:
+    def forward(self, input, guidance):
         return joint_bilateral_blur(
             input,
             guidance,

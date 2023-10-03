@@ -2,21 +2,23 @@ from __future__ import annotations
 
 from typing import Any
 
-from kornia.core import Module, IntegratedTensor, tensor
+from kornia.core import Module, tensor
 from kornia.core.check import KORNIA_CHECK_IS_TENSOR
 from kornia.utils import deprecated
+
+import keras_core as keras
 
 from .filter import filter2d, filter2d_separable
 from .kernels import _unpack_2d_ks, get_gaussian_kernel1d, get_gaussian_kernel2d
 
 
 def gaussian_blur2d(
-    input: IntegratedTensor,
+    input,
     kernel_size: tuple[int, int] | int,
-    sigma: tuple[float, float] | IntegratedTensor,
+    sigma,
     border_type: str = 'reflect',
     separable: bool = True,
-) -> IntegratedTensor:
+):
     r"""Create an operator that blurs a tensor using a Gaussian filter.
 
     .. image:: _static/img/gaussian_blur2d.png
@@ -52,7 +54,7 @@ def gaussian_blur2d(
     KORNIA_CHECK_IS_TENSOR(input)
 
     if isinstance(sigma, tuple):
-        sigma = IntegratedTensor([sigma], dtype=input.dtype)
+        sigma = keras.ops.convert_to_tensor([sigma], dtype=input.dtype)
     else:
         KORNIA_CHECK_IS_TENSOR(sigma)
         sigma = sigma(dtype=input.dtype)
@@ -103,7 +105,7 @@ class GaussianBlur2d(Module):
     def __init__(
         self,
         kernel_size: tuple[int, int] | int,
-        sigma: tuple[float, float] | IntegratedTensor,
+        sigma,
         border_type: str = 'reflect',
         separable: bool = True,
     ) -> None:
@@ -122,10 +124,10 @@ class GaussianBlur2d(Module):
             f"separable={self.separable})"
         )
 
-    def forward(self, input: IntegratedTensor) -> IntegratedTensor:
+    def forward(self, input):
         return gaussian_blur2d(input, self.kernel_size, self.sigma, self.border_type, self.separable)
 
 
 @deprecated(replace_with='gaussian_blur2d', version='6.9.10')
-def gaussian_blur2d_t(*args: Any, **kwargs: Any) -> IntegratedTensor:
+def gaussian_blur2d_t(*args: Any, **kwargs: Any):
     return gaussian_blur2d(*args, **kwargs)

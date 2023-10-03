@@ -1,11 +1,7 @@
-from typing import Union, cast
-
-from kornia.core import IntegratedTensor
-
 import keras_core as keras
 
 
-def rgb_to_bgr(image: IntegratedTensor) -> IntegratedTensor:
+def rgb_to_bgr(image):
     r"""Convert a RGB image to BGR.
 
     .. image:: _static/img/rgb_to_bgr.png
@@ -20,8 +16,6 @@ def rgb_to_bgr(image: IntegratedTensor) -> IntegratedTensor:
         >>> input = torch.rand(2, 3, 4, 5)
         >>> output = rgb_to_bgr(input) # 2x3x4x5
     """
-    if not isinstance(image, IntegratedTensor):
-        raise TypeError(f"Input type is not a IntegratedTensor. Got {type(image)}")
 
     if len(image.shape) < 3 or image.shape[-3] != 3:
         raise ValueError(f"Input size must have a shape of (*, 3, H, W).Got {image.shape}")
@@ -29,7 +23,7 @@ def rgb_to_bgr(image: IntegratedTensor) -> IntegratedTensor:
     return bgr_to_rgb(image)
 
 
-def bgr_to_rgb(image: IntegratedTensor) -> IntegratedTensor:
+def bgr_to_rgb(image):
     r"""Convert a BGR image to RGB.
 
     Args:
@@ -42,18 +36,16 @@ def bgr_to_rgb(image: IntegratedTensor) -> IntegratedTensor:
         >>> input = torch.rand(2, 3, 4, 5)
         >>> output = bgr_to_rgb(input) # 2x3x4x5
     """
-    if not isinstance(image, IntegratedTensor):
-        raise TypeError(f"Input type is not a IntegratedTensor. Got {type(image)}")
 
     if len(image.shape) < 3 or image.shape[-3] != 3:
         raise ValueError(f"Input size must have a shape of (*, 3, H, W).Got {image.shape}")
 
     # flip image channels
-    out: IntegratedTensor = keras.ops.flip(image,axis=-3)
+    out = keras.ops.flip(image,axis=-3)
     return out
 
 
-def rgb_to_rgba(image: IntegratedTensor, alpha_val: Union[float, IntegratedTensor]) -> IntegratedTensor:
+def rgb_to_rgba(image, alpha_val):
     r"""Convert an image from RGB to RGBA.
 
     Args:
@@ -70,19 +62,12 @@ def rgb_to_rgba(image: IntegratedTensor, alpha_val: Union[float, IntegratedTenso
         >>> input = torch.rand(2, 3, 4, 5)
         >>> output = rgb_to_rgba(input, 1.) # 2x4x4x5
     """
-    if not isinstance(image, IntegratedTensor):
-        raise TypeError(f"Input type is not a IntegratedTensor. Got {type(image)}")
 
     if len(image.shape) < 3 or image.shape[-3] != 3:
         raise ValueError(f"Input size must have a shape of (*, 3, H, W).Got {image.shape}")
 
-    if not isinstance(alpha_val, (float, IntegratedTensor)):
-        raise TypeError(f"alpha_val type is not a float or IntegratedTensor. Got {type(alpha_val)}")
-
     # add one channel
     r, g, b = keras.ops.split(image, image.shape[-3], axis=-3)
-
-    a: IntegratedTensor = cast(IntegratedTensor, alpha_val)
 
     if isinstance(alpha_val, float):
         a = keras.ops.full_like(r, float(alpha_val))
@@ -90,7 +75,7 @@ def rgb_to_rgba(image: IntegratedTensor, alpha_val: Union[float, IntegratedTenso
     return keras.ops.concatenate([r, g, b, a], axis=-3)
 
 
-def bgr_to_rgba(image: IntegratedTensor, alpha_val: Union[float, IntegratedTensor]) -> IntegratedTensor:
+def bgr_to_rgba(image, alpha_val):
     r"""Convert an image from BGR to RGBA.
 
     Args:
@@ -107,21 +92,16 @@ def bgr_to_rgba(image: IntegratedTensor, alpha_val: Union[float, IntegratedTenso
         >>> input = torch.rand(2, 3, 4, 5)
         >>> output = bgr_to_rgba(input, 1.) # 2x4x4x5
     """
-    if not isinstance(image, IntegratedTensor):
-        raise TypeError(f"Input type is not a IntegratedTensor. Got {type(image)}")
 
     if len(image.shape) < 3 or image.shape[-3] != 3:
         raise ValueError(f"Input size must have a shape of (*, 3, H, W).Got {image.shape}")
 
-    if not isinstance(alpha_val, (float, IntegratedTensor)):
-        raise TypeError(f"alpha_val type is not a float or IntegratedTensor. Got {type(alpha_val)}")
-
     # convert first to RGB, then add alpha channel
-    x_rgb: IntegratedTensor = bgr_to_rgb(image)
+    x_rgb = bgr_to_rgb(image)
     return rgb_to_rgba(x_rgb, alpha_val)
 
 
-def rgba_to_rgb(image: IntegratedTensor) -> IntegratedTensor:
+def rgba_to_rgb(image):
     r"""Convert an image from RGBA to RGB.
 
     Args:
@@ -134,8 +114,6 @@ def rgba_to_rgb(image: IntegratedTensor) -> IntegratedTensor:
         >>> input = torch.rand(2, 4, 4, 5)
         >>> output = rgba_to_rgb(input) # 2x3x4x5
     """
-    if not isinstance(image, IntegratedTensor):
-        raise TypeError(f"Input type is not a IntegratedTensor. Got {type(image)}")
 
     if len(image.shape) < 3 or image.shape[-3] != 4:
         raise ValueError(f"Input size must have a shape of (*, 4, H, W).Got {image.shape}")
@@ -144,15 +122,15 @@ def rgba_to_rgb(image: IntegratedTensor) -> IntegratedTensor:
     r, g, b, a = keras.ops.split(image, image.shape[-3], axis=-3)
 
     # compute new channels
-    a_one = IntegratedTensor(1.0) - a
-    r_new: IntegratedTensor = a_one * r + a * r
-    g_new: IntegratedTensor = a_one * g + a * g
-    b_new: IntegratedTensor = a_one * b + a * b
+    a_one = 1.0 - a
+    r_new = a_one * r + a * r
+    g_new = a_one * g + a * g
+    b_new = a_one * b + a * b
 
     return keras.ops.concatenate([r_new, g_new, b_new], axis=-3)
 
 
-def rgba_to_bgr(image: IntegratedTensor) -> IntegratedTensor:
+def rgba_to_bgr(image):
     r"""Convert an image from RGBA to BGR.
 
     Args:
@@ -165,18 +143,16 @@ def rgba_to_bgr(image: IntegratedTensor) -> IntegratedTensor:
         >>> input = torch.rand(2, 4, 4, 5)
         >>> output = rgba_to_bgr(input) # 2x3x4x5
     """
-    if not isinstance(image, IntegratedTensor):
-        raise TypeError(f"Input type is not a IntegratedTensor. Got {type(image)}")
 
     if len(image.shape) < 3 or image.shape[-3] != 4:
         raise ValueError(f"Input size must have a shape of (*, 4, H, W).Got {image.shape}")
 
     # convert to RGB first, then to BGR
-    x_rgb: IntegratedTensor = rgba_to_rgb(image)
+    x_rgb = rgba_to_rgb(image)
     return rgb_to_bgr(x_rgb)
 
 
-def rgb_to_linear_rgb(image: IntegratedTensor) -> IntegratedTensor:
+def rgb_to_linear_rgb(image):
     r"""Convert an sRGB image to linear RGB. Used in colorspace conversions.
 
     .. image:: _static/img/rgb_to_linear_rgb.png
@@ -191,18 +167,16 @@ def rgb_to_linear_rgb(image: IntegratedTensor) -> IntegratedTensor:
         >>> input = torch.rand(2, 3, 4, 5)
         >>> output = rgb_to_linear_rgb(input) # 2x3x4x5
     """
-    if not isinstance(image, IntegratedTensor):
-        raise TypeError(f"Input type is not a IntegratedTensor. Got {type(image)}")
 
     if len(image.shape) < 3 or image.shape[-3] != 3:
         raise ValueError(f"Input size must have a shape of (*, 3, H, W).Got {image.shape}")
 
-    lin_rgb: IntegratedTensor = keras.ops.where(image > 0.04045, keras.ops.power(((image + 0.055) / 1.055), 2.4), image / 12.92)
+    lin_rgb = keras.ops.where(image > 0.04045, keras.ops.power(((image + 0.055) / 1.055), 2.4), image / 12.92)
 
     return lin_rgb
 
 
-def linear_rgb_to_rgb(image: IntegratedTensor) -> IntegratedTensor:
+def linear_rgb_to_rgb(image):
     r"""Convert a linear RGB image to sRGB. Used in colorspace conversions.
 
     Args:
@@ -215,21 +189,19 @@ def linear_rgb_to_rgb(image: IntegratedTensor) -> IntegratedTensor:
         >>> input = torch.rand(2, 3, 4, 5)
         >>> output = linear_rgb_to_rgb(input) # 2x3x4x5
     """
-    if not isinstance(image, IntegratedTensor):
-        raise TypeError(f"Input type is not a IntegratedTensor. Got {type(image)}")
 
     if len(image.shape) < 3 or image.shape[-3] != 3:
         raise ValueError(f"Input size must have a shape of (*, 3, H, W).Got {image.shape}")
 
     threshold = 0.0031308
-    rgb: IntegratedTensor = keras.ops.where(
+    rgb = keras.ops.where(
         image > threshold, 1.055 * keras.ops.pow(keras.ops.clip(image,x_min=threshold), 1 / 2.4) - 0.055, 12.92 * image
     )
 
     return rgb
 
 
-class BgrToRgb(IntegratedTensor):   #Check nn.Module
+class BgrToRgb(keras.layers.Layer):   #Check nn.Module
     r"""Convert image from BGR to RGB.
 
     The image data is assumed to be in the range of (0, 1).
@@ -247,11 +219,11 @@ class BgrToRgb(IntegratedTensor):   #Check nn.Module
         >>> output = rgb(input)  # 2x3x4x5
     """
 
-    def call(self, image: IntegratedTensor) -> IntegratedTensor:
+    def call(self, image):
         return bgr_to_rgb(image)
 
 
-class RgbToBgr(IntegratedTensor): #Check nn.module
+class RgbToBgr(keras.layers.Layer): #Check nn.module
     r"""Convert an image from RGB to BGR.
 
     The image data is assumed to be in the range of (0, 1).
@@ -269,11 +241,11 @@ class RgbToBgr(IntegratedTensor): #Check nn.module
         >>> output = bgr(input)  # 2x3x4x5
     """
 
-    def call(self, image: IntegratedTensor) -> IntegratedTensor:
+    def call(self, image):
         return rgb_to_bgr(image)
 
 
-class RgbToRgba(IntegratedTensor): #CHECK nn.Module
+class RgbToRgba(keras.layers.Layer): #CHECK nn.Module
     r"""Convert an image from RGB to RGBA.
 
     Add an alpha channel to existing RGB image.
@@ -283,7 +255,7 @@ class RgbToRgba(IntegratedTensor): #CHECK nn.Module
           of shape :math:`(*,1,H,W)`.
 
     Returns:
-        IntegratedTensor: RGBA version of the image with shape :math:`(*,4,H,W)`.
+        Tensor: RGBA version of the image with shape :math:`(*,4,H,W)`.
 
     Shape:
         - image: :math:`(*, 3, H, W)`
@@ -297,15 +269,15 @@ class RgbToRgba(IntegratedTensor): #CHECK nn.Module
         >>> output = rgba(input)  # 2x4x4x5
     """
 
-    def __init__(self, alpha_val: Union[float, IntegratedTensor]) -> None:
+    def __init__(self, alpha_val) -> None:
         super().__init__()
         self.alpha_val = alpha_val
 
-    def call(self, image: IntegratedTensor) -> IntegratedTensor:
+    def call(self, image):
         return rgb_to_rgba(image, self.alpha_val)
 
 
-class BgrToRgba(IntegratedTensor): #CHECK nn.Module
+class BgrToRgba(keras.layers.Layer): #CHECK nn.Module
     r"""Convert an image from BGR to RGBA.
 
     Add an alpha channel to existing RGB image.
@@ -329,15 +301,15 @@ class BgrToRgba(IntegratedTensor): #CHECK nn.Module
         >>> output = rgba(input)  # 2x4x4x5
     """
 
-    def __init__(self, alpha_val: Union[float, IntegratedTensor]) -> None:
+    def __init__(self, alpha_val):
         super().__init__()
         self.alpha_val = alpha_val
 
-    def call(self, image: IntegratedTensor) -> IntegratedTensor:
+    def call(self, image):
         return rgb_to_rgba(image, self.alpha_val)
 
 
-class RgbaToRgb(IntegratedTensor): #CHECK nn.Module
+class RgbaToRgb(keras.layers.Layer): #CHECK nn.Module
     r"""Convert an image from RGBA to RGB.
 
     Remove an alpha channel from RGB image.
@@ -355,11 +327,11 @@ class RgbaToRgb(IntegratedTensor): #CHECK nn.Module
         >>> output = rgba(input)  # 2x3x4x5
     """
 
-    def call(self, image: IntegratedTensor) -> IntegratedTensor:
+    def call(self, image):
         return rgba_to_rgb(image)
 
 
-class RgbaToBgr(IntegratedTensor): #CHECK nn.Module
+class RgbaToBgr(keras.layers.Layer): #CHECK nn.Module
     r"""Convert an image from RGBA to BGR.
 
     Remove an alpha channel from BGR image.
@@ -377,11 +349,11 @@ class RgbaToBgr(IntegratedTensor): #CHECK nn.Module
         >>> output = rgba(input)  # 2x3x4x5
     """
 
-    def call(self, image: IntegratedTensor) -> IntegratedTensor:
+    def call(self, image):
         return rgba_to_bgr(image)
 
 
-class RgbToLinearRgb(IntegratedTensor): #CHECK nn.Module
+class RgbToLinearRgb(keras.layers.Layer): #CHECK nn.Module
     r"""Convert an image from sRGB to linear RGB.
 
     Reverses the gamma correction of sRGB to get linear RGB values for colorspace conversions.
@@ -407,11 +379,11 @@ class RgbToLinearRgb(IntegratedTensor): #CHECK nn.Module
         [3] https://en.wikipedia.org/wiki/SRGB
     """
 
-    def call(self, image: IntegratedTensor) -> IntegratedTensor:
+    def call(self, image):
         return rgb_to_linear_rgb(image)
 
 
-class LinearRgbToRgb(IntegratedTensor): #CHECK nn.Module
+class LinearRgbToRgb(keras.layers.Layer): #CHECK nn.Module
     r"""Convert a linear RGB image to sRGB.
 
     Applies gamma correction to linear RGB values, at the end of colorspace conversions, to get sRGB.
@@ -436,5 +408,5 @@ class LinearRgbToRgb(IntegratedTensor): #CHECK nn.Module
         [3] https://en.wikipedia.org/wiki/SRGB
     """
 
-    def call(self, image: IntegratedTensor) -> IntegratedTensor:
+    def call(self, image):
         return linear_rgb_to_rgb(image)
